@@ -1,6 +1,0 @@
-This is a result file.
-@Time:2023-12-27 15:37:37
-['what is the capital of China?', 'how to implement quick sort in python?', 'Beijing', 'sorting algorithms']:
-[[69.65807342529297, 88.0355224609375, 68.79682922363281]]
-['what is the capital of China?', 'how to implement quick sort in python?', 'Beijing', 'sorting algorithms']:
-[[69.65807342529297, 88.0355224609375, 68.79682922363281]]

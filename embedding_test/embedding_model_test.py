@@ -3,12 +3,12 @@
 # @Time    : 2023/12/27
 # @Author  : LiuTao
 # @File    : embedding_model_test
-from datetime import datetime
 import json
 import os
 import time
+from datetime import datetime
 
-import torch.nn.functional as F
+import torch.nn.functional as ff
 from sentence_transformers import SentenceTransformer
 from sentence_transformers.util import cos_sim
 from torch import Tensor
@@ -29,7 +29,7 @@ def create_result_file(file_name):
     formatted_time = dt_object.strftime('%Y-%m-%d %H:%M:%S')
     if not os.path.exists(file_path):
         with open(file_path, 'w') as file:
-            file.write("This is a result file."+"\n"+f"@Time:{formatted_time}"+"\n")
+            file.write("This is a result file." + "\n" + f"@CreatTime:{formatted_time}" + "\n")
         print(f"File '{file_name}' created successfully at '{folder}'.")
     else:
         print(f"File '{file_name}' already exists at '{folder}'.")
@@ -54,12 +54,13 @@ def average_pool(last_hidden_states: Tensor,
     return last_hidden.sum(dim=1) / attention_mask.sum(dim=1)[..., None]
 
 
-def tst_embedding_score(model_name:str):
+def tst_embedding_score(model_name: str):
     current_path = os.path.dirname(os.path.abspath(__file__))
     dataset_path = f'{current_path}/dataset.json'
     dataset = read_json(dataset_path)
     # print(dataset)
-    create_result_file(f'result_{model_name}.txt')
+    file_name = os.path.basename(model_name)
+    create_result_file(f'result_{file_name}.txt')
     input_texts_list = dataset['input_text']
     for i in input_texts_list:
         input_texts = i
@@ -73,12 +74,13 @@ def tst_embedding_score(model_name:str):
         embeddings = average_pool(outputs.last_hidden_state, batch_dict['attention_mask'])
 
         # (Optionally) normalize embeddings
-        embeddings = F.normalize(embeddings, p=2, dim=1)
+        embeddings = ff.normalize(embeddings, p=2, dim=1)
         scores = (embeddings[:1] @ embeddings[1:].T) * 100
         tolist = scores.tolist()
         print(tolist)
-        content = f"{input_texts}:"+"\n"+f"{tolist}"
-        write_result_file(f"{current_path}/result_{model_name}.txt", content + "\n")
+        content = f"{input_texts}:" + "\n" + f"{tolist}"
+        write_result_file(f"{current_path}/result_{file_name}.txt",
+                          content + "\n" + "==================" + "\n")
 
 
 # sentenceTransformers计算余弦相似度
@@ -86,7 +88,8 @@ def tst_embedding_using_cos_sim(model_name):
     current_path = os.path.dirname(os.path.abspath(__file__))
     dataset_path = f'{current_path}/dataset.json'
     dataset = read_json(dataset_path)
-    create_result_file(f'result_cos_sim_{model_name}.txt')
+    file_name = os.path.basename(model_name)
+    create_result_file(f'result_cos_sim_{file_name}.txt')
     sentences_list = dataset['data']
     for i in sentences_list:
         sentences = i
@@ -94,10 +97,12 @@ def tst_embedding_using_cos_sim(model_name):
         sentences_embeddings = sentences_model.encode(sentences)
         cos_sim_score = cos_sim(sentences_embeddings[0], sentences_embeddings[1])
         print(cos_sim_score)
-        content_data = f"{sentences}:"+"\n"+f"{cos_sim_score}"
-        write_result_file(f"{current_path}/result_cos_sim_{model_name}.txt", content_data + "\n")
+        content_data = f"{sentences}:" + "\n" + f"{cos_sim_score}"
+        write_result_file(f"{current_path}/result_cos_sim_{file_name}.txt",
+                          content_data + "\n" + "==================" + "\n")
 
 
 if __name__ == "__main__":
-    tst_embedding_score("thenlper/gte-base")
-    tst_embedding_using_cos_sim("thenlper/gte-base")
+    embedding_model_path = "thenlper/gte-base"
+    tst_embedding_score(embedding_model_path)
+    tst_embedding_using_cos_sim(embedding_model_path)
